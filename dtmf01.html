@@ -1,73 +1,43 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DTMF Sound</title>
+    <title>Oscillator</title>
 </head>
 <body>
-    <div>
-        <button onmousedown="startDTMF('1')" onmouseup="stopDTMF()" onmouseleave="stopDTMF()">1</button>
-        <button onmousedown="startDTMF('2')" onmouseup="stopDTMF()" onmouseleave="stopDTMF()">2</button>
-        <button onmousedown="startDTMF('3')" onmouseup="stopDTMF()" onmouseleave="stopDTMF()">3</button><br>
-        <button onmousedown="startDTMF('4')" onmouseup="stopDTMF()" onmouseleave="stopDTMF()">4</button>
-        <button onmousedown="startDTMF('5')" onmouseup="stopDTMF()" onmouseleave="stopDTMF()">5</button>
-        <button onmousedown="startDTMF('6')" onmouseup="stopDTMF()" onmouseleave="stopDTMF()">6</button><br>
-        <button onmousedown="startDTMF('7')" onmouseup="stopDTMF()" onmouseleave="stopDTMF()">7</button>
-        <button onmousedown="startDTMF('8')" onmouseup="stopDTMF()" onmouseleave="stopDTMF()">8</button>
-        <button onmousedown="startDTMF('9')" onmouseup="stopDTMF()" onmouseleave="stopDTMF()">9</button><br>
-        <button onmousedown="startDTMF('*')" onmouseup="stopDTMF()" onmouseleave="stopDTMF()">*</button>
-        <button onmousedown="startDTMF('0')" onmouseup="stopDTMF()" onmouseleave="stopDTMF()">0</button>
-        <button onmousedown="startDTMF('#')" onmouseup="stopDTMF()" onmouseleave="stopDTMF()">#</button>
-    </div>
-
+    <button id="playButton">Play Sound</button>
     <script>
-        let oscillator1, oscillator2, gainNode;
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let audioContext;
+        let oscillator2;
+        let gainNode;
 
-        function startDTMF(tone) {
-            const frequencies = {
-                '1': [697, 1209],
-                '2': [697, 1336],
-                '3': [697, 1477],
-                '4': [770, 1209],
-                '5': [770, 1336],
-                '6': [770, 1477],
-                '7': [852, 1209],
-                '8': [852, 1336],
-                '9': [852, 1477],
-                '*': [941, 1209],
-                '0': [941, 1336],
-                '#': [941, 1477]
-            };
+        document.getElementById('playButton').addEventListener('mousedown', playSound);
+        document.getElementById('playButton').addEventListener('touchstart', playSound);
 
-            // Stop existing oscillators if any
-            stopDTMF();
+        document.getElementById('playButton').addEventListener('mouseup', stopSound);
+        document.getElementById('playButton').addEventListener('touchend', stopSound);
 
-            // Create a GainNode to control the volume
-            gainNode = audioCtx.createGain();
-            gainNode.gain.value = 0.5; // Set volume to 50%
+        function playSound() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
 
-            oscillator1 = audioCtx.createOscillator();
-            oscillator2 = audioCtx.createOscillator();
+            oscillator2 = audioContext.createOscillator();
+            gainNode = audioContext.createGain();
 
-            oscillator1.frequency.value = frequencies[tone][0];
-            oscillator2.frequency.value = frequencies[tone][1];
-
-            oscillator1.connect(gainNode);
             oscillator2.connect(gainNode);
+            gainNode.connect(audioContext.destination);
 
-            gainNode.connect(audioCtx.destination);
+            oscillator2.type = 'square';
+            oscillator2.frequency.setValueAtTime(440, audioContext.currentTime); // 440HzのA音
 
-            oscillator1.start();
+            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+
             oscillator2.start();
         }
 
-        function stopDTMF() {
-            if (oscillator1) {
-                oscillator1.stop();
-                oscillator1.disconnect();
-            }
+        function stopSound() {
             if (oscillator2) {
                 oscillator2.stop();
                 oscillator2.disconnect();
